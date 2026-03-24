@@ -1,272 +1,48 @@
-GitHub Actions KT — Session 1: Fundamentals
-Objective
+# Project Title
 
-The goal of this session is to understand GitHub Actions fundamentals, workflow structure, execution flow, and core features used in real-world CI/CD and automation pipelines.
+## Table of Contents
+1. [Introduction](#introduction)
+2. [Installation](#installation)
+3. [Usage](#usage)
+4. [Contributing](#contributing)
+5. [License](#license)
 
-By the end of this session, you should understand:
+## Introduction
 
-Workflow structure
-Events and triggers
-Jobs and steps
-Runners
-Inputs and outputs
-Matrix strategy
-Reusable workflows
-Cross-repository workflows
-Logs and debugging
-Job summaries
-1. GitHub Actions in CI/CD (Use Cases)
+This project is designed to ... 
 
-GitHub Actions is an event-driven automation platform built into GitHub. It allows teams to automate CI/CD pipelines, infrastructure deployments, and repository automation tasks.
+## Installation
 
-Common Use Cases
-Category	Example
-CI	Build and test code
-Code Quality	Linting and formatting
-Security	Dependency scanning, SAST
-Build	Package applications
-Containers	Docker build and push
-CD	Application deployment
-Infrastructure	Terraform/CDK deployment
-Automation	PR/Issue automation
-Scheduled Jobs	Cron jobs
-AI	AI PR review / code analysis
-Example Flow
-Developer Push → Workflow Trigger → Build → Test → Package → Deploy
-2. Repository Structure (.github vs Other Folders)
+To install this project, run the following command:
+```bash
+npm install project-name
+```
 
-GitHub Actions workflows must be placed in a specific directory.
+## Usage
 
-Standard Repository Structure
-repo/
-  app/
-  scripts/
-  infra/
-  ci/
-  .github/
-    workflows/
-      ci.yml
-      deploy.yml
-    actions/
-      custom-action/
-Folder Purpose
-Folder	Purpose
-.github/workflows	Workflow files
-.github/actions	Custom reusable actions
-ci/	Reusable workflows
-scripts/	Shell/Python/Node scripts
-infra/	Terraform/CDK
-app/	Application code
+### Example Command
+```bash
+npm start
+```
 
-Important: Only workflows inside .github/workflows/ are executed automatically.
+| Feature     | Description                   |
+|-------------|-------------------------------|
+| Feature 1   | Description of feature 1      |
+| Feature 2   | Description of feature 2      |
+| Feature 3   | Description of feature 3      |
 
-3. Workflow YAML Structure
+## Contributing
 
-A workflow is defined using a YAML file.
+1. Fork it
+2. Create your feature branch (`git checkout -b feature/fooBar`)
+3. Commit your changes (`git commit -am 'Add some fooBar'`)
+4. Push to the branch (`git push origin feature/fooBar`)
+5. Create a new Pull Request
 
-Basic Workflow Example
-name: Basic CI
+## License
 
-on:
-  push:
-    branches: [ main ]
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
+---
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Run command
-        run: echo "Hello GitHub Actions"
-Workflow Components
-Field	Description
-name	Workflow name
-on	Trigger
-jobs	Jobs to run
-runs-on	Runner
-steps	Steps in job
-uses	Use an action
-run	Run command
-env	Environment variables
-secrets	Secure variables
-4. Events and Triggers
-
-Workflows run based on events.
-
-Common Events
-Event	Use Case
-push	Build
-pull_request	PR validation
-workflow_dispatch	Manual run
-schedule	Nightly jobs
-workflow_call	Reusable workflows
-repository_dispatch	Cross-repo trigger
-Example
-on:
-  push:
-    branches: [ main ]
-
-  pull_request:
-
-  workflow_dispatch:
-
-  schedule:
-    - cron: "0 2 * * *"
-5. Jobs and Job Dependencies
-
-A workflow can have multiple jobs.
-
-Example
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo "Running tests"
-
-  build:
-    runs-on: ubuntu-latest
-    needs: test
-    steps:
-      - run: echo "Building app"
-Key Points
-Jobs run in parallel by default
-Use needs to run jobs in sequence
-Jobs run on separate runners
-6. Steps — uses vs run
-
-Each job contains steps.
-
-Step Type	Purpose
-uses	Reusable action
-run	Shell command
-Example
-steps:
-  - uses: actions/checkout@v4
-  - run: npm install
-  - run: npm test
-7. Running Scripts (Bash / Python / Node / TypeScript)
-
-Workflows can run scripts written in different languages.
-
-Bash Example
-- run: bash scripts/build.sh
-Python Example
-- run: python scripts/test.py
-Node Example
-- run: node scripts/app.js
-TypeScript Example
-- run: npx ts-node scripts/app.ts
-8. Inputs (Manual Inputs / workflow_dispatch)
-
-Manual workflows can accept inputs.
-
-on:
-  workflow_dispatch:
-    inputs:
-      environment:
-        description: "Environment"
-        required: true
-        default: "dev"
-
-Use input:
-
-- run: echo "Deploying to ${{ github.event.inputs.environment }}"
-Use Cases
-Manual deployment
-Choose environment
-Choose version
-Run specific job
-9. Passing Data Between Steps and Jobs
-Step Output Example
-- name: Set output
-  id: step1
-  run: echo "version=1.0" >> $GITHUB_OUTPUT
-
-- name: Use output
-  run: echo "Version is ${{ steps.step1.outputs.version }}"
-Job Output Example
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    outputs:
-      version: ${{ steps.step1.outputs.version }}
-Artifacts Example
-- uses: actions/upload-artifact@v4
-  with:
-    name: build
-    path: build/
-10. Matrix Strategy
-
-Matrix allows running jobs multiple times with different configurations.
-
-strategy:
-  matrix:
-    python-version: [3.10, 3.11]
-
-Use case:
-
-Test multiple versions
-Multiple environments
-Parallel jobs
-11. Reusable Workflows
-
-Reusable workflows allow sharing workflow logic across repositories.
-
-Reusable Workflow
-on:
-  workflow_call:
-Calling Reusable Workflow
-jobs:
-  call-workflow:
-    uses: org/repo/.github/workflows/ci.yml@main
-12. Reusable Actions
-
-Custom reusable actions are stored in:
-
-.github/actions/
-Example
-- uses: ./.github/actions/docker-build
-13. Cross-Repository Workflows
-
-Trigger workflows in another repository.
-
-Example
-- name: Trigger workflow in another repo
-  run: |
-    curl -X POST \
-    -H "Authorization: token ${{ secrets.TOKEN }}" \
-    https://api.github.com/repos/org/repo/dispatches \
-    -d '{"event_type":"deploy"}'
-14. Runners — GitHub-hosted vs Self-hosted
-Runner	Description
-GitHub-hosted	Managed by GitHub
-Self-hosted	Your own server
-When to Use Self-hosted
-Private network access
-Deploy inside VPC
-Large builds
-Custom tools
-Security restrictions
-15. Logs and Debugging
-
-When workflow fails:
-
-Open Actions tab
-Select workflow
-Select job
-Select failed step
-Check logs
-Fix and rerun
-16. Job Summary and Reporting
-
-You can write summary information:
-
-- name: Add summary
-  run: |
-    echo "## Build Summary" >> $GITHUB_STEP_SUMMARY
-    echo "Build completed successfully" >> $GITHUB_STEP_SUMMARY
-
-This appears in the workflow summary page.
+*Content generated automatically, please verify.*
