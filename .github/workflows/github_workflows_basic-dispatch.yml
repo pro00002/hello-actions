@@ -1,0 +1,13 @@
+# Basic workflow: Manual run, Hello World shell job, all sections explained
+name: Basic Workflow Dispatch
+
+on:
+  workflow_dispatch:  # Allows the workflow to be run manually from the Actions tab
+
+jobs:
+  hello:
+    name: Say Hello
+    runs-on: ubuntu-latest  # Uses the latest Ubuntu runner
+    steps:
+      - name: Hello World script
+        run: echo "Hello, world! This is a basic workflow."  # Shell command step
