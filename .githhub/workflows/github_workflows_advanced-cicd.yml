@@ -1,0 +1,88 @@
+# Advanced CI/CD: matrix, artifacts, reusable action, scripts, inputs, outputs, summaries
+name: Advanced CI/CD Demo
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Target deployment environment
+        required: true
+        default: dev
+        type: choice
+        options:
+          - dev
+          - prod
+
+  push:
+    branches: [main]
+
+jobs:
+  prepare:
+    name: Prepare & Say Hi
+    runs-on: ubuntu-latest
+    outputs:
+      greet: ${{ steps.greeting.outputs.greeting }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Custom reusable action (say-hi)
+        id: greeting
+        uses: ./.github/actions/say-hi
+        with:
+          whom: ${{ github.actor }}
+      - name: Save greeting to summary
+        run: echo "${{ steps.greeting.outputs.greeting }}" >> $GITHUB_STEP_SUMMARY
+
+  build:
+    name: Python Build (matrix)
+    runs-on: ubuntu-latest
+    needs: prepare
+    strategy:
+      matrix:
+        python-version: [3.10, 3.11]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install deps
+        run: pip install -r python-app/requirements.txt
+      - name: Lint
+        run: python -m py_compile python-app/hello.py
+      - name: Upload python source
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-source
+          path: python-app/
+
+  run-script:
+    name: Run shell script
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Run hello.sh script
+        run: bash scripts/hello.sh
+
+  app:
+    name: Validate & Run Python
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: python-source
+      - name: Run Python app
+        run: python hello.py
+      - name: Output greeting from prepare
+        run: echo "Greeting from prepare: ${{ needs.prepare.outputs.greet }}"
+      - name: Add summary
+        run: |
+          echo "Python CI/CD for ${{ github.repository }}" >> $GITHUB_STEP_SUMMARY
+          echo "Matrix: ${{ strategy.matrix.python-version }}" >> $GITHUB_STEP_SUMMARY
